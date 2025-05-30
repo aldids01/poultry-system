@@ -5,10 +5,13 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Tenancy\FactoryProfile;
 use App\Filament\Pages\Tenancy\RegisterFactory;
 use App\Models\Factory;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Http\Middleware\IdentifyTenant;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -35,7 +38,6 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->passwordReset()
             ->emailVerification()
-            ->profile(isSimple: false)
             ->simplePageMaxContentWidth(MaxWidth::Medium)
             ->maxContentWidth(MaxWidth::Full)
             ->databaseTransactions()
@@ -63,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
+                IdentifyTenant::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
@@ -72,6 +75,27 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::FOOTER,
                 fn() => view('footer')
-            );
+            )
+            ->tenantMiddleware([
+                SyncShieldTenant::class,
+            ], isPersistent: true)
+            ->plugins([
+                FilamentShieldPlugin::make()
+                    ->gridColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3
+                    ])
+                    ->sectionColumnSpan(1)
+                    ->checkboxListColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 4,
+                    ])
+                    ->resourceCheckboxListColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                    ]),
+            ]);
     }
 }
