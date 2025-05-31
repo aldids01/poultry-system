@@ -95,7 +95,7 @@ class SupplierPolicy
      */
     public function replicate(User $user, Supplier $supplier): bool
     {
-        return $user->can('replicate_supplier');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class SupplierPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_supplier');
+        return $user->can('{{ Reorder }}');
     }
 }

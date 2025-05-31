@@ -95,7 +95,7 @@ class InventoryTransactionsPolicy
      */
     public function replicate(User $user, InventoryTransactions $inventoryTransactions): bool
     {
-        return $user->can('replicate_inventory::transactions');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class InventoryTransactionsPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_inventory::transactions');
+        return $user->can('{{ Reorder }}');
     }
 }

@@ -58,4 +58,12 @@ class Factory extends Model implements HasAvatar, HasCurrentTenantLabel
     {
         return $this->hasMany(SaleItem::class);
     }
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+    public function purchaseOrderItems(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderItem::class);
+    }
 }

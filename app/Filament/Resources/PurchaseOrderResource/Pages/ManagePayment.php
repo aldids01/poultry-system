@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\SaleResource\Pages;
+namespace App\Filament\Resources\PurchaseOrderResource\Pages;
 
-use App\Filament\Resources\SaleResource;
-use App\Models\Sale;
+use App\Filament\Resources\PurchaseOrderResource;
+use App\Models\PurchaseOrder;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -19,22 +19,22 @@ use Illuminate\Support\Number;
 
 class ManagePayment extends ManageRelatedRecords
 {
-    protected static string $resource = SaleResource::class;
+    protected static string $resource = PurchaseOrderResource::class;
 
     protected static string $relationship = 'payments';
-    public Sale $sale;
+    public PurchaseOrder $sale;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public function mount($record = null): void
     {
         parent::mount($record);
 
         if ($record && is_numeric($record)) {
-            $this->sale = Sale::findOrFail($record);
+            $this->sale = PurchaseOrder::findOrFail($record);
         }
     }
     public function getTitle(): string|Htmlable
     {
-        return 'Payments for '.$this->sale->customer->name;
+        return 'Payments for '.$this->sale->supplier->supplier_name;
     }
 
     public static function getNavigationLabel(): string
@@ -49,8 +49,8 @@ class ManagePayment extends ManageRelatedRecords
                 Forms\Components\Hidden::make('factory_id')
                     ->default(fn()=>Filament::getTenant()->id)
                     ->required(),
-                Forms\Components\Hidden::make('customer_id')
-                    ->default(fn()=> $this->sale->customer->id),
+                Forms\Components\Hidden::make('supplier_id')
+                    ->default(fn()=> $this->sale->supplier->id),
                 Forms\Components\Hidden::make('user_id')
                     ->default(auth()->id())
                     ->required(),
@@ -74,6 +74,7 @@ class ManagePayment extends ManageRelatedRecords
                         'Online' => 'Online',
                         'POS' => 'POS',
                         'Bank' => 'Bank',
+                        'USSD' => 'USSD',
                         'Cheque' => 'Cheque',
                     ])->default('Cash'),
                 Forms\Components\TextInput::make('amount')
@@ -124,14 +125,14 @@ class ManagePayment extends ManageRelatedRecords
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->slideOver()
-                    ->label('Receive Payment')
-                    ->modalHeading(fn() => 'Received Payment for ' .$this->sale->customer->name)
+                    ->label('Make Payment')
+                    ->modalHeading(fn() => 'Make Payment for ' .$this->sale->supplier->supplier_name)
                     ->modalDescription(fn() => "Amount due: NGN".Number::format($this->sale->total, 2))
                     ->hidden(fn()=>$this->sale->status === 'Completed')
                     ->modalWidth(MaxWidth::FitContent),
                 Tables\Actions\Action::make('Back')
                     ->color('danger')
-                    ->url(fn () => SaleResource::getUrl('index', ['tenant' => Filament::getTenant()]))
+                    ->url(fn () => PurchaseOrderResource::getUrl('index', ['tenant' => Filament::getTenant()]))
                     ->icon('heroicon-o-arrow-left') // Optional: Add an icon for clarity
             ])
             ->actions([

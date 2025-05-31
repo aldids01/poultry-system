@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,4 +30,30 @@ class Product extends Model
     {
         return $this->belongsTo(Factory::class);
     }
+    public function rawMaterials(): HasMany
+    {
+        return $this->hasMany(BillMaterial::class, 'finished_good_id');
+    }
+    public function usedInBillMaterials(): HasMany
+    {
+        return $this->hasMany(BillMaterial::class, 'raw_material_id');
+    }
+    public function scopeRawMaterials(Builder $query): Builder
+    {
+        return $query->where('product_type', 'raw_materials');
+    }
+    public function scopeFinishedGoods(Builder $query): Builder
+    {
+        return $query->where('product_type', 'finished_goods');
+    }
+    public function purchaseOrderItems(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'product_id');
+    }
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class, 'product_id');
+    }
+
+
 }

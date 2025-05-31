@@ -3,7 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Payment;
-use App\Models\Sale;
+use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\DB;
 
 class PaymentObserver
@@ -13,7 +13,7 @@ class PaymentObserver
      */
     public function created(Payment $payment): void
     {
-        $this->updateSaleStatus($payment->sale);
+        $this->updateSaleStatus($payment);
     }
 
     /**
@@ -22,7 +22,7 @@ class PaymentObserver
     public function updated(Payment $payment): void
     {
         if ($payment->isDirty('status') || $payment->isDirty('amount')) {
-            $this->updateSaleStatus($payment->sale);
+            $this->updateSaleStatus($payment);
         }
     }
 
@@ -31,9 +31,7 @@ class PaymentObserver
      */
     public function deleted(Payment $payment): void
     {
-        if ($payment->sale) {
-            $this->updateSaleStatus($payment->sale);
-        }
+            $this->updateSaleStatus($payment);
     }
 
     /**
@@ -41,7 +39,7 @@ class PaymentObserver
      */
     public function restored(Payment $payment): void
     {
-        $this->updateSaleStatus($payment->sale);
+        $this->updateSaleStatus($payment);
     }
 
     /**
@@ -54,37 +52,84 @@ class PaymentObserver
     /**
      * Core logic to update the sale's status based on its payments.
      */
-    protected function updateSaleStatus(Sale $sale): void
+    protected function updateSaleStatus(Payment $payment): void
     {
+        // Determine which entity this payment belongs to
+        $relatedEntity = null;
+        $totalField = ''; // Field on the entity that stores its total amount
+        $statusField = ''; // Field on the entity that stores its payment status
+        $mainStatusField = ''; // For PO's main status field
+
+        if ($payment->sale_id) {
+            $relatedEntity = $payment->sale;
+            $totalField = 'total';
+            $statusField = 'status'; // Assuming your Sale model uses 'sales_status'
+        } elseif ($payment->purchase_order_id) {
+            $relatedEntity = $payment->purchaseOrder;
+            $totalField = 'total'; // Assuming your PurchaseOrder model uses 'total_amount'
+            $statusField = 'payment'; // PO's payment status field
+            $mainStatusField = 'status'; // PO's main status field
+        }
+        // Add more conditions for customer_id or supplier_id if they have statuses to update
+        // elseif ($payment->customer_id) {
+        //     $relatedEntity = $payment->customer;
+        //     $totalField = 'total_due'; // Example
+        //     $statusField = 'account_status'; // Example
+        // }
+
+        if (!$relatedEntity) {
+            // No related entity found, or it's a type not handled by this observer
+            return;
+        }
+
         // Use a database transaction to ensure atomicity
-        DB::transaction(function () use ($sale) {
-            // Re-fetch the sale to ensure we have the latest version and lock it
-            $sale->refresh()->lockForUpdate();
+        DB::transaction(function () use ($relatedEntity, $totalField, $statusField, $mainStatusField) {
+            // Re-fetch the entity to ensure we have the latest version and lock it
+            $relatedEntity->refresh()->lockForUpdate();
 
-            $totalPaid = $sale->payments()
-                ->where('status', 'Completed')
-                ->sum('amount');
+            $totalPaid = $relatedEntity->payments()
+                ->where('status', 'Completed') // Use Enum value
+                ->sum('amount'); // Your Payment model uses 'amount'
 
-            $hasProcessingPayments = $sale->payments()
-                ->where('status', 'Processing')
+            $hasProcessingPayments = $relatedEntity->payments()
+                ->where('status', 'Processing') // Use Enum value
                 ->exists();
 
-            $newStatus = $sale->status; // Default to current status
+            $entityTotal = $relatedEntity->{$totalField};
+            $currentPaymentStatus = $relatedEntity->{$statusField};
+            $newPaymentStatus = $currentPaymentStatus; // Default to current
 
-            if ($totalPaid >= $sale->total) {
-                $newStatus = 'Completed';
+            if ($totalPaid >= $entityTotal) {
+                $newPaymentStatus = 'Completed'; // For PO
+                // For Sale: $newPaymentStatus = SaleStatusEnum::COMPLETED->value;
             } elseif ($totalPaid > 0 || $hasProcessingPayments) {
-                // If some amount is paid or there are payments in processing, set to 'processing'
-                $newStatus = 'Processing';
+                $newPaymentStatus = 'Processing'; // For PO
+                // For Sale: $newPaymentStatus = SaleStatusEnum::PROCESSING->value;
             } else {
-                // No completed payments and no payments in processing, revert to 'pending'
-                $newStatus = 'Pending';
+                $newPaymentStatus = 'Pending'; // For PO
+                // For Sale: $newPaymentStatus = SaleStatusEnum::PENDING->value;
             }
 
-            // Only update if the status has actually changed to avoid unnecessary database writes
-            if ($sale->status !== $newStatus) {
-                $sale->status = $newStatus;
-                $sale->save();
+            // Update the payment status field on the related entity
+            if ($relatedEntity->{$statusField} !== $newPaymentStatus) {
+                $relatedEntity->{$statusField} = $newPaymentStatus;
+            }
+
+            // Specific logic for PurchaseOrder's 'paid_amount' and 'status'
+            if ($relatedEntity instanceof PurchaseOrder) {
+                // Also update the main 'status' of the PO if it's 'approved' and becomes 'paid'
+                // This is optional and depends on your PO workflow.
+                // You might have other conditions here (e.g., only if not already received)
+                if ($newPaymentStatus === 'Completed' &&
+                    $relatedEntity->{$mainStatusField} === 'Approved') {
+                    // Example: Change main PO status to indicate it's ready for receipt
+                    // $relatedEntity->{$mainStatusField} = PurchaseOrderStatusEnum::READY_FOR_RECEIPT; // Custom enum value
+                }
+            }
+
+            // Save the related entity if anything changed
+            if ($relatedEntity->isDirty()) {
+                $relatedEntity->save();
             }
         });
     }

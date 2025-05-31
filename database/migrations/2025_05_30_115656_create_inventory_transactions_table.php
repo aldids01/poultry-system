@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('transaction_id');
             $table->foreignId('product_id')->constrained('products');
             $table->foreignId('factory_id')->constrained('factories')->onDelete('cascade');
-            $table->enum('transaction_type', ['IN', 'OUT', 'ADJUSTMENT', 'RETURN']); // e.g., 'IN', 'OUT', 'ADJUSTMENT', 'RETURN'
+            $table->enum('transaction_type', ['IN', 'OUT', 'ADJUSTMENT', 'RETURN', 'ASSEMBLY_CONSUMPTION', 'ASSEMBLY_PRODUCTION']); // e.g., 'IN', 'OUT', 'ADJUSTMENT', 'RETURN'
             $table->integer('quantity_changed');
             $table->dateTime('transaction_date')->useCurrent();
             $table->string('source_destination')->nullable();

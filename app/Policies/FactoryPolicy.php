@@ -95,7 +95,7 @@ class FactoryPolicy
      */
     public function replicate(User $user, Factory $factory): bool
     {
-        return $user->can('replicate_factory');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class FactoryPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_factory');
+        return $user->can('{{ Reorder }}');
     }
 }

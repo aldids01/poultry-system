@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\PurchaseOrder;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ActivityPolicy
+class PurchaseOrderPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class ActivityPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_activity');
+        return $user->can('view_any_purchase::order');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Activity $activity): bool
+    public function view(User $user, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->can('view_activity');
+        return $user->can('view_purchase::order');
     }
 
     /**
@@ -31,23 +31,23 @@ class ActivityPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_activity');
+        return $user->can('create_purchase::order');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Activity $activity): bool
+    public function update(User $user, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->can('update_activity');
+        return $user->can('update_purchase::order');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Activity $activity): bool
+    public function delete(User $user, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->can('delete_activity');
+        return $user->can('delete_purchase::order');
     }
 
     /**
@@ -55,15 +55,15 @@ class ActivityPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_activity');
+        return $user->can('delete_any_purchase::order');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Activity $activity): bool
+    public function forceDelete(User $user, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->can('force_delete_activity');
+        return $user->can('force_delete_purchase::order');
     }
 
     /**
@@ -71,15 +71,15 @@ class ActivityPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_activity');
+        return $user->can('force_delete_any_purchase::order');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Activity $activity): bool
+    public function restore(User $user, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->can('restore_activity');
+        return $user->can('restore_purchase::order');
     }
 
     /**
@@ -87,13 +87,13 @@ class ActivityPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_activity');
+        return $user->can('restore_any_purchase::order');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Activity $activity): bool
+    public function replicate(User $user, PurchaseOrder $purchaseOrder): bool
     {
         return $user->can('{{ Replicate }}');
     }

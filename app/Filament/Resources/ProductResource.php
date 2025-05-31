@@ -34,7 +34,58 @@ class ProductResource extends Resource
                     ->default(fn():string => Str::slug(Str::random(8))),
                 Forms\Components\TextInput::make('quantity_on_hand')
                     ->numeric()
+                    ->default(0)
                     ->nullable(),
+                Forms\Components\ToggleButtons::make('product_type')
+                    ->inline()
+                    ->live()
+                    ->options([
+                        'raw_material' => 'Raw Material',
+                        'finished_good' => 'Finished Goods',
+                    ])->default('raw_material'),
+                Forms\Components\Repeater::make('materials')
+                    ->relationship('rawMaterials')
+                    ->label('Bill of Materials')
+                    ->columnSpanFull()
+                    ->schema([
+                        Forms\Components\Hidden::make('factory_id')
+                            ->default(fn()=>Filament::getTenant()->id)
+                            ->required(),
+                        Forms\Components\Select::make('raw_material_id ')
+                            ->required()
+                            ->relationship('rawMaterial', 'name', fn (Forms\Get $get, Builder $query) =>
+                                $query->where('product_type', 'raw_material')->where('quantity_on_hand', '>', 0)->where('factory_id', Filament::getTenant()?->id)
+                            )
+                            ->native(false)
+                            ->searchable()
+                            ->preload()
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get, Forms\Components\Component $component) {
+
+                                $selectedProductId = $get('raw_material_id');
+                                if ($selectedProductId) {
+                                    $product = Product::query()->where('product_type', 'raw_material')->where($selectedProductId);
+                                    if ($product) {
+                                        $set('unit_price', $product->price);
+                                    } else {
+                                        $set('unit_price', null);
+                                    }
+                                } else {
+                                    $set('unit_price', null);
+                                }
+
+                                self::updateItemTotalAndGrandTotal($set, $get, $component);
+                            })
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                        Forms\Components\TextInput::make('quantity_needed')
+                            ->label('Quantity')
+                            ->numeric()
+                            ->minValue(0.0001)
+                            ->required(),
+                        Forms\Components\TextInput::make('cost')
+                            ->label('Cost (Per Unit of Raw Material)')
+                            ->required()
+                    ])->columns(3)
+                    ->hidden(fn (Forms\Get $get): bool => $get('product_type') === 'raw_material'),
                 Forms\Components\TextInput::make('cost')
                     ->required()
                     ->numeric()
@@ -55,7 +106,20 @@ class ProductResource extends Resource
                     ->maxLength(255),
             ]);
     }
+    protected static function updateMaterialQty(Forms\Set $set, Forms\Get $get, Forms\Components\Component $component): void
+    {
+        $quantity = (float) $get('quantity');
+        $unitPrice = (float) $get('unit_price');
 
+        $itemSubtotal = $quantity * $unitPrice;
+        $set('item_subtotal', $itemSubtotal);
+        $allItemsData = $get('../../items') ?? [];
+        $grandTotal = collect($allItemsData)->sum(function ($item) {
+            return (float) ($item['item_subtotal'] ?? 0);
+        });
+
+        $set('../../total', $grandTotal);
+    }
     public static function table(Table $table): Table
     {
         return $table
@@ -65,6 +129,15 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('slug')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('product_type')
+                    ->searchable()
+                    ->badge()
+                    ->color(fn (Product $record): string => match ($record->product_type) {
+                        'raw_material' => 'primary',
+                        'finished_good' => 'success',
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucwords(str_replace('_', ' ', $state))),
                 Tables\Columns\TextColumn::make('quantity_on_hand')
                     ->numeric()
                     ->label('Current Stock')
@@ -81,6 +154,10 @@ class ProductResource extends Resource
                     ->summarize(Sum::make())
                     ->sortable(),
                 Tables\Columns\TextColumn::make('price')
+                    ->numeric()
+                    ->summarize(Sum::make())
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('stock_value')
                     ->numeric()
                     ->summarize(Sum::make())
                     ->sortable(),

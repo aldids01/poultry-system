@@ -19,6 +19,10 @@ class Payment extends Model
     {
         return $this->belongsTo(Sale::class);
     }
+    public function purchaseOrder(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+    }
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
