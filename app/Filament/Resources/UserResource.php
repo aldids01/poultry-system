@@ -20,6 +20,7 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 107;
     protected static bool $isScopedToTenant = false;
 
     public static function form(Form $form): Form

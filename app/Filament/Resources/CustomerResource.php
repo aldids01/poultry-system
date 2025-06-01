@@ -20,6 +20,7 @@ class CustomerResource extends Resource
     protected static ?string $model = Customer::class;
 
     protected static ?string $navigationGroup = 'Point of Sale';
+    protected static ?int $navigationSort = 100;
 
     public static function form(Form $form): Form
     {
@@ -82,6 +83,9 @@ class CustomerResource extends Resource
             ])
             ->actions([
                Tables\Actions\ActionGroup::make([
+                   Tables\Actions\Action::make('Payment_history')
+                       ->icon('heroicon-s-credit-card')
+                       ->url(fn ($record) => CustomerResource::getUrl('payments', ['record' => $record->id])),
                    Tables\Actions\ViewAction::make()
                        ->slideOver()
                        ->modalWidth(MaxWidth::FitContent),
@@ -106,6 +110,7 @@ class CustomerResource extends Resource
     {
         return [
             'index' => Pages\ManageCustomers::route('/'),
+            'payments' => Pages\ManagePayment::route('/{record}/payments')
         ];
     }
 

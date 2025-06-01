@@ -31,4 +31,8 @@ class Payment extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+    public function proforma(): BelongsTo
+    {
+        return $this->belongsTo(Proforma::class);
+    }
 }

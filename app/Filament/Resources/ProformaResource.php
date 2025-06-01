@@ -2,16 +2,14 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\SaleResource\Pages;
-use App\Filament\Resources\SaleResource\RelationManagers;
+use App\Filament\Resources\ProformaResource\Pages;
+use App\Filament\Resources\ProformaResource\RelationManagers;
 use App\Models\InventoryTransactions;
 use App\Models\Product;
-use App\Models\Sale;
+use App\Models\Proforma;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
@@ -19,16 +17,14 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
-class SaleResource extends Resource
+class ProformaResource extends Resource
 {
-    protected static ?string $model = Sale::class;
+    protected static ?string $model = Proforma::class;
 
     protected static ?string $navigationGroup = 'Point of Sale';
-    protected static ?int $navigationSort = 101;
+    protected static ?int $navigationSort = 102;
 
     public static function form(Form $form): Form
     {
@@ -44,8 +40,8 @@ class SaleResource extends Resource
                     ->preload()
                     ->native(false)
                     ->createOptionForm([
-                       Forms\Components\Grid::make()
-                           ->columns(3)
+                        Forms\Components\Grid::make()
+                            ->columns(3)
                             ->schema([
                                 Forms\Components\TextInput::make('name')
                                     ->required()
@@ -69,7 +65,7 @@ class SaleResource extends Resource
                     ->default(auth()->id())
                     ->required(),
                 Forms\Components\Repeater::make('items')
-                    ->relationship('saleItems')
+                    ->relationship('proformaItems')
                     ->columnSpanFull()
                     ->schema([
                         Forms\Components\Hidden::make('factory_id')
@@ -129,7 +125,7 @@ class SaleResource extends Resource
                     ->required()
                     ->columnSpanFull()
                     ->prefix('NGN')
-                    ->label('Sale Grand Total')
+                    ->label('Proforma Grand Total')
                     ->inlineLabel()
                     ->default(0)
                     ->numeric()
@@ -152,40 +148,7 @@ class SaleResource extends Resource
         $set('../../total', $grandTotal);
     }
 
-    public static function processSaleInventoryInAction(Sale $sale, string $transactionType, string $notesPrefix): void
-    {
-        DB::transaction(function () use ($sale, $transactionType, $notesPrefix) {
-            // Ensure sale items are loaded from the database, as they are now fully persisted
-            $sale->load('saleItems');
 
-            if ($sale->saleItems->isEmpty()) {
-                Notification::make()
-                    ->title('Warning: Sale #'.$sale->id.' has no items for inventory processing.')
-                    ->warning()
-                    ->send();
-                return;
-            }
-
-            foreach ($sale->saleItems as $saleItem) {
-                $quantityChange = ($transactionType === 'OUT') ? -$saleItem->quantity : $saleItem->quantity;
-
-                InventoryTransactions::create([
-                    'product_id' => $saleItem->product_id,
-                    'transaction_type' => $transactionType,
-                    'quantity_changed' => $quantityChange,
-                    'transaction_date' => now(),
-                    'source_destination' => 'Sale #'.$sale->id . ' (Customer Order)',
-                    'reference_number' => $sale->id,
-                    'user_id' => Auth::id(),
-                    'notes' => $notesPrefix . $sale->id,
-                    'factory_id' => $sale->factory_id ?? null,
-                ]);
-            }
-        });
-
-        // Notifications for success are handled directly by the action's `after` hook
-        // or by the action itself if it has a success message.
-    }
     public static function table(Table $table): Table
     {
         return $table
@@ -232,30 +195,20 @@ class SaleResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-               Tables\Actions\ActionGroup::make([
-                   Tables\Actions\Action::make('Payment')
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('Payment')
                         ->icon('heroicon-s-credit-card')
-                       ->url(fn ($record) => SaleResource::getUrl('payments', ['record' => $record->id])),
-                   Tables\Actions\ViewAction::make()
-                       ->slideOver()
-                       ->modalWidth(MaxWidth::FitContent),
-                   Tables\Actions\EditAction::make()
-                       ->slideOver()
-                       ->modalWidth(MaxWidth::FitContent)
-                       ->after(function (Sale $record) { // This is the key hook for updates
-                           // When editing, first reverse old transactions, then apply new ones
-                           DB::transaction(function () use ($record) {
-                               InventoryTransactions::where('reference_number', $record->id)
-                                   ->where('transaction_type', 'OUT')
-                                   ->forceDelete(); // Permanently remove old OUT transactions
-
-                               self::processSaleInventoryInAction($record, 'OUT', 'Stock re-debited for updated Sale #');
-                           });
-                       }),
-                   Tables\Actions\DeleteAction::make(),
-                   Tables\Actions\ForceDeleteAction::make(),
-                   Tables\Actions\RestoreAction::make(),
-               ])
+                        ->url(fn ($record) => ProformaResource::getUrl('payments', ['record' => $record->id])),
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\EditAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -269,7 +222,7 @@ class SaleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageSales::route('/'),
+            'index' => Pages\ManageProformas::route('/'),
             'payments' => Pages\ManagePayment::route('/{record}/payments'),
         ];
     }

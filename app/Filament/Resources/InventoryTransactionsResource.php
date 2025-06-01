@@ -19,7 +19,8 @@ class InventoryTransactionsResource extends Resource
 {
     protected static ?string $model = InventoryTransactions::class;
 
-    protected static ?string $navigationGroup = 'Point of Sale';
+    protected static ?string $navigationGroup = 'Inventory';
+    protected static ?int $navigationSort = 106;
 
     public static function form(Form $form): Form
     {
@@ -91,6 +92,8 @@ class InventoryTransactionsResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Performed By')
+                    ->toggleable()
+                    ->toggledHiddenByDefault()
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')

@@ -25,6 +25,7 @@ class PurchaseOrderResource extends Resource
     protected static ?string $model = PurchaseOrder::class;
 
     protected static ?string $navigationGroup = 'Purchase Order';
+    protected static ?int $navigationSort = 104;
 
     public static function form(Form $form): Form
     {
@@ -285,7 +286,7 @@ class PurchaseOrderResource extends Resource
                             ->modalWidth(MaxWidth::FitContent)
                             ->color('primary')
                             ->visible(fn (PurchaseOrder $record): bool =>
-                                $record->status === 'Approved' || $record->status === 'Received' &&
+                                $record->status === 'Approved' && $record->status === 'Received' ||
                                 $record->payment === 'Completed' &&
                                 !$record->isFullyReceived() // Only if not all items are received yet
                             )

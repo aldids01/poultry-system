@@ -34,41 +34,5 @@ class Sale extends Model
    {
        return $this->hasMany(Payment::class);
    }
-    protected function afterCreate(): void
-    {
-        $sale = $this->record; // The newly created Sale model
 
-        DB::transaction(function () use ($sale) {
-            // Ensure sale items are loaded, as they are now persisted
-            $sale->load('saleItems');
-
-            if ($sale->saleItems->isEmpty()) {
-                Notification::make()
-                    ->title('Warning: Sale #'.$sale->id.' created but has no items for inventory processing.')
-                    ->warning()
-                    ->send();
-                return;
-            }
-
-            foreach ($sale->saleItems as $saleItem) {
-                // Create an OUT inventory transaction for each item sold
-                InventoryTransactions::create([
-                    'product_id' => $saleItem->product_id,
-                    'transaction_type' => 'OUT',
-                    'quantity_changed' => -$saleItem->quantity, // Negative for debiting stock
-                    'transaction_date' => now(),
-                    'source_destination' => 'Sale #'.$sale->id . ' (Customer Order)',
-                    'reference_number' => $sale->id,
-                    'user_id' => Auth::id(),
-                    'notes' => 'Stock debited for Sale #' . $sale->id,
-                    'factory_id' => $sale->factory_id ?? null, // Use null-safe if factory_id might not exist
-                ]);
-            }
-        });
-
-        Notification::make()
-            ->title('Sale created and inventory debited successfully!')
-            ->success()
-            ->send();
-    }
 }

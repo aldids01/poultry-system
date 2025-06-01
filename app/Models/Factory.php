@@ -66,4 +66,12 @@ class Factory extends Model implements HasAvatar, HasCurrentTenantLabel
     {
         return $this->hasMany(PurchaseOrderItem::class);
     }
+    public function proformas():HasMany
+    {
+        return $this->hasMany(Proforma::class);
+    }
+    public function proformaItems(): HasMany
+    {
+        return $this->hasMany(ProformaItem::class);
+    }
 }

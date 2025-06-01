@@ -19,4 +19,8 @@ class Supplier extends Model
     {
         return $this->belongsTo(Factory::class);
     }
+    public function payments():HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

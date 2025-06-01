@@ -57,7 +57,7 @@ class InventoryTransactionObserver
     {
         $product = $inventoryTransaction->product;
 
-        if ($product) {
+        if ($product && $inventoryTransaction->transaction_type != 'ASSEMBLY_PRODUCTION') {
             DB::transaction(function () use ($product, $changeAmount, $inventoryTransaction) {
                 // Ensure we handle potential race conditions by re-fetching the latest quantity
                 $product->lockForUpdate(); // Locks the row for the duration of the transaction

@@ -9,6 +9,10 @@ class BillMaterial extends Model
 {
     protected $guarded = [];
 
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
     public function rawMaterial(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'raw_material_id');

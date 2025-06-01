@@ -20,6 +20,7 @@ class SupplierResource extends Resource
     protected static ?string $model = Supplier::class;
 
     protected static ?string $navigationGroup = 'Purchase Order';
+    protected static ?int $navigationSort = 103;
 
     public static function form(Form $form): Form
     {
@@ -62,6 +63,7 @@ class SupplierResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('factory.name')
                     ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
@@ -81,6 +83,9 @@ class SupplierResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('Payment_history')
+                        ->icon('heroicon-s-credit-card')
+                        ->url(fn ($record) => SupplierResource::getUrl('payments', ['record' => $record->id])),
                     Tables\Actions\ViewAction::make()
                         ->slideOver()
                         ->modalWidth(MaxWidth::FitContent),
@@ -105,6 +110,7 @@ class SupplierResource extends Resource
     {
         return [
             'index' => Pages\ManageSuppliers::route('/'),
+            'payments' => Pages\ManagePayment::route('/{record}/payments'),
         ];
     }
 
