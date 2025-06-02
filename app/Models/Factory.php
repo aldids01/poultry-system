@@ -74,4 +74,40 @@ class Factory extends Model implements HasAvatar, HasCurrentTenantLabel
     {
         return $this->hasMany(ProformaItem::class);
     }
+    public function areas():HasMany
+    {
+        return $this->hasMany(Area::class);
+    }
+    public function utilityItems():HasMany
+    {
+        return $this->hasMany(UtilityItem::class);
+    }
+    public function birdReceiveds():HasMany
+    {
+        return $this->hasMany(BirdReceived::class);
+    }
+    public function blastFreezers():HasMany
+    {
+        return $this->hasMany(BlastFreezer::class);
+    }
+    public function coldRooms():HasMany
+    {
+        return $this->hasMany(ColdRoom::class);
+    }
+    public function coolingVans():HasMany
+    {
+        return $this->hasMany(CoolingVan::class);
+    }
+    public function vanItems():HasMany
+    {
+        return $this->hasMany(VanItem::class);
+    }
+    public function hygieneCleans():HasMany
+    {
+        return $this->hasMany(HygieneClean::class);
+    }
+    public function utilityFacilities():HasMany
+    {
+        return $this->hasMany(UtilityFacility::class);
+    }
 }

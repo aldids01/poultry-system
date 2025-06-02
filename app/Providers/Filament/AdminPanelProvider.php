@@ -25,6 +25,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Rupadana\ApiService\ApiServicePlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -46,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->tenantProfile(FactoryProfile::class)
             ->tenantRegistration(RegisterFactory::class)
             ->login()
+            ->databaseNotifications()
             ->colors([
                 'primary' => Color::Purple,
             ])
@@ -80,6 +82,7 @@ class AdminPanelProvider extends PanelProvider
                 SyncShieldTenant::class,
             ], isPersistent: true)
             ->plugins([
+                ApiServicePlugin::make(),
                 FilamentShieldPlugin::make()
                     ->gridColumns([
                         'default' => 1,

@@ -21,4 +21,8 @@ class BillMaterial extends Model
     {
         return $this->belongsTo(Product::class, 'finished_good_id');
     }
+    public function factory(): BelongsTo
+    {
+        return $this->belongsTo(Factory::class);
+    }
 }
