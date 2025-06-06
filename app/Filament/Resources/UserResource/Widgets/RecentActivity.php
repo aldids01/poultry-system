@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UserResource\Widgets;
 
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
@@ -23,7 +24,7 @@ class RecentActivity extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(ActivityModel::query()->where('causer_id', auth()->id()))
+            ->query(ActivityModel::query()->where('causer_id', auth()->id())->whereDate('created_at', Carbon::today()))
             ->columns([
                 TextColumn::make('log_name')
                     ->badge()

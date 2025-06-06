@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InventoryTransactionsResource\Pages;
 use App\Filament\Resources\InventoryTransactionsResource\RelationManagers;
 use App\Models\InventoryTransactions;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -173,6 +174,10 @@ class InventoryTransactionsResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('transaction_date', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

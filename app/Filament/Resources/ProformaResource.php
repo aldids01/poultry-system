@@ -7,6 +7,7 @@ use App\Filament\Resources\ProformaResource\RelationManagers;
 use App\Models\InventoryTransactions;
 use App\Models\Product;
 use App\Models\Proforma;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -159,6 +160,7 @@ class ProformaResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Sale by')
@@ -230,6 +232,10 @@ class ProformaResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

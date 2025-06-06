@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UtilityFacility extends Model
 {
-    use SoftDeletes;
     protected $guarded = [];
     public function supervisor():BelongsTo
     {
@@ -22,5 +21,9 @@ class UtilityFacility extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    public function factory():BelongsTo
+    {
+        return $this->belongsTo(Factory::class);
     }
 }

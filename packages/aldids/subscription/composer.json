@@ -1,0 +1,55 @@
+{
+    "name": "aldids/subscription",
+    "type": "library",
+    "description": "Laravel filament multitenant subscription plugin",
+    "keywords": [
+        "php",
+        "laravel",
+        "template"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Aldids\\Subscription\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Aldids\\Subscription\\Tests\\": "tests/src/",
+            "Aldids\\Subscription\\Tests\\Database\\Factories\\": "tests/database/factories"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Aldids\\Subscription\\SubscriptionServiceProvider"
+            ]
+        }
+    },
+    "authors": [
+        {
+            "name": "Nchandom Alpha Elias",
+            "email": "nchandoms@gmail.com"
+        }
+    ],
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "scripts": {
+        "testbench": "vendor/bin/testbench package:discover --ansi",
+        "analyse": "vendor/bin/phpstan analyse src tests",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "require": {
+        "php": "^8.1|^8.2",
+        "tomatophp/console-helpers": "^1.1"
+    },
+    
+    "version": "v1.0.0"
+}

@@ -5,6 +5,8 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Tenancy\FactoryProfile;
 use App\Filament\Pages\Tenancy\RegisterFactory;
 use App\Models\Factory;
+use App\Providers\AldidsBillingProvider;
+use App\Providers\AldidsProvider;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use Filament\Http\Middleware\Authenticate;
@@ -12,6 +14,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Http\Middleware\IdentifyTenant;
+use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -26,6 +29,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Rupadana\ApiService\ApiServicePlugin;
+use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+use Teguh02\FilamentDbSync\FilamentDbSync;
 
 class AdminPanelProvider extends PanelProvider
 {

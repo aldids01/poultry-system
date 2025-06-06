@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('hygiene_items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hygiene_id')->constrained('hygiene_cleans')->cascadeOnDelete();
             $table->foreignId('area_id')->constrained('areas')->cascadeOnDelete();
             $table->enum('status', ['Clean', 'Dirty'])->default('Clean');
             $table->longText('remarks')->nullable();

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProductResource\Pages;
 
+use App\Filament\Exports\ProductExporter;
 use App\Filament\Resources\ProductResource;
 use App\Models\Product;
 use Filament\Actions;
@@ -24,6 +25,12 @@ class ManageProducts extends ManageRecords
                         ProductResource::processFinishedGoodProduction($record);
                     }
                 }),
+            Actions\ExportAction::make()
+                ->color('info')
+                ->slideOver()
+                ->label('Export all products')
+                ->modalWidth(MaxWidth::FitContent)
+                ->exporter(ProductExporter::class),
         ];
     }
 }

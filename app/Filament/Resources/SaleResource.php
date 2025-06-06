@@ -7,6 +7,7 @@ use App\Filament\Resources\SaleResource\RelationManagers;
 use App\Models\InventoryTransactions;
 use App\Models\Product;
 use App\Models\Sale;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -196,6 +197,7 @@ class SaleResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Sale by')
@@ -277,6 +279,10 @@ class SaleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

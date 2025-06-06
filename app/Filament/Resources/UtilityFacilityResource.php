@@ -5,9 +5,12 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UtilityFacilityResource\Pages;
 use App\Filament\Resources\UtilityFacilityResource\RelationManagers;
 use App\Models\UtilityFacility;
+use Carbon\Carbon;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,12 +27,45 @@ class UtilityFacilityResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('supervisor_id')
+                    ->columnSpanFull()
                     ->relationship('supervisor', 'name'),
-                Forms\Components\TextInput::make('user_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('factory_id')
-                    ->required()
-                    ->numeric(),
+                Forms\Components\Hidden::make('user_id')
+                    ->default(auth()->id()),
+                Forms\Components\Hidden::make('factory_id')
+                    ->default(fn()=> Filament::getTenant()->id)
+                    ->required(),
+                Forms\Components\Repeater::make('items')
+                    ->columnSpanFull()
+                    ->relationship('lineItems')
+                    ->schema([
+                        Forms\Components\Select::make('utility_item_id')
+                            ->required()
+                            ->relationship('item', 'name')
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->columnSpanFull()
+                                    ->maxLength(255),
+                                Forms\Components\Textarea::make('description')
+                                    ->columnSpanFull(),
+                            ])->createOptionModalHeading('Create Utility and Facility Item'),
+                        Forms\Components\ToggleButtons::make('status')
+                            ->required()
+                            ->inline()
+                            ->grouped()
+                            ->options([
+                                'Okay' => 'Okay',
+                                'Needs Attention' => 'Needs Attention',
+                            ]),
+                        Forms\Components\TextInput::make('remarks')
+                            ->maxLength(255),
+                        Forms\Components\Hidden::make('user_id')
+                            ->default(auth()->id()),
+                        Forms\Components\Hidden::make('factory_id')
+                            ->default(fn()=> Filament::getTenant()->id)
+                            ->required(),
+                    ])->columns(3),
             ]);
     }
 
@@ -40,11 +76,12 @@ class UtilityFacilityResource extends Resource
                 Tables\Columns\TextColumn::make('supervisor.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('user.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('factory_id')
+                Tables\Columns\TextColumn::make('factory.name')
                     ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -56,14 +93,19 @@ class UtilityFacilityResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\EditAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -84,8 +126,9 @@ class UtilityFacilityResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
             ]);
     }
 }

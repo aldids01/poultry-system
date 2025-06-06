@@ -7,6 +7,7 @@ use App\Filament\Resources\PurchaseOrderResource\RelationManagers;
 use App\Models\InventoryTransactions;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -401,6 +402,10 @@ class PurchaseOrderResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

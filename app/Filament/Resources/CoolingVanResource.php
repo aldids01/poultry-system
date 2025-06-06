@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CoolingVanResource\Pages;
 use App\Filament\Resources\CoolingVanResource\RelationManagers;
 use App\Models\CoolingVan;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Hidden;
@@ -141,15 +142,17 @@ class CoolingVanResource extends Resource
             ->filters([
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\EditAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\EditAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -169,6 +172,10 @@ class CoolingVanResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery();
+        return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ]);
     }
 }

@@ -20,6 +20,7 @@ class CustomerResource extends Resource
     protected static ?string $model = Customer::class;
 
     protected static ?string $navigationGroup = 'Point of Sale';
+    protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 100;
 
     public static function form(Form $form): Form

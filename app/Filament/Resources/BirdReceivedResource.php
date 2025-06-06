@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BirdReceivedResource\Pages;
 use App\Filament\Resources\BirdReceivedResource\RelationManagers;
 use App\Models\BirdReceived;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -57,7 +58,7 @@ class BirdReceivedResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('time_of_arrival')
-                    ->time('H:m:ia'),
+                    ->time('H:ia'),
                 Tables\Columns\TextColumn::make('batch_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('supervisor.name')
@@ -103,15 +104,17 @@ class BirdReceivedResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\EditAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\EditAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -132,6 +135,10 @@ class BirdReceivedResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

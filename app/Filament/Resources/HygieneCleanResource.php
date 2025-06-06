@@ -5,10 +5,12 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\HygieneCleanResource\Pages;
 use App\Filament\Resources\HygieneCleanResource\RelationManagers;
 use App\Models\HygieneClean;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +28,42 @@ class HygieneCleanResource extends Resource
             ->schema([
                 Forms\Components\Select::make('supervisor_id')
                     ->relationship('supervisor', 'name')
+                    ->columnSpanFull()
                     ->required(),
+                Forms\Components\Repeater::make('items')
+                    ->columnSpanFull()
+                    ->label('Items')
+                    ->relationship('hygiene')
+                    ->schema([
+                        Forms\Components\Select::make('area_id')
+                            ->required()
+                            ->relationship('area', 'name')
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->columnSpanFull()
+                                    ->maxLength(255),
+                                Forms\Components\Textarea::make('description')
+                                    ->columnSpanFull(),
+                            ])
+                            ->createOptionModalHeading('Create area'),
+                        Forms\Components\ToggleButtons::make('status')
+                            ->required()
+                            ->inline()
+                            ->grouped()
+                            ->options([
+                                'Clean' => 'Clean',
+                                'Dirty' => 'Dirty',
+                            ]),
+                        Forms\Components\TextInput::make('remarks')
+                            ->maxLength(255),
+                        Forms\Components\Hidden::make('user_id')
+                            ->default(auth()->id()),
+                        Forms\Components\Hidden::make('factory_id')
+                            ->default(fn()=> Filament::getTenant()->id)
+                            ->required(),
+                    ])->columns(3),
                 Forms\Components\Hidden::make('user_id')
                     ->default(auth()->id()),
                 Forms\Components\Hidden::make('factory_id')
@@ -42,11 +79,14 @@ class HygieneCleanResource extends Resource
                 Tables\Columns\TextColumn::make('supervisor.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('user.name')
+                    ->sortable()
+                    ->label('Recorded by')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('factory.name')
                     ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
@@ -65,11 +105,17 @@ class HygieneCleanResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+               Tables\Actions\ActionGroup::make([
+                   Tables\Actions\ViewAction::make()
+                       ->slideOver()
+                       ->modalWidth(MaxWidth::FitContent),
+                   Tables\Actions\EditAction::make()
+                       ->slideOver()
+                       ->modalWidth(MaxWidth::FitContent),
+                   Tables\Actions\DeleteAction::make(),
+                   Tables\Actions\ForceDeleteAction::make(),
+                   Tables\Actions\RestoreAction::make(),
+               ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -90,6 +136,10 @@ class HygieneCleanResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

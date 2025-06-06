@@ -1,0 +1,27 @@
+Options All -Indexes
+
+<Files .htaccess>
+order allow,deny
+deny from all
+</Files>
+
+<IfModule mod_rewrite.c>
+  # Redirect to the public folder
+  RewriteEngine On
+  # RewriteBase /
+  RewriteCond %{REQUEST_URI} !^/storage(/.*)?$
+  RewriteRule ^$ public/ [L]
+  RewriteRule (.*) public/$1 [L]
+
+  # Redirect to HTTPS
+  # RewriteEngine On
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php81” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php81___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

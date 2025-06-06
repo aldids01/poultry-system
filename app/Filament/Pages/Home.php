@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\UserResource\Widgets\RecentActivity;
+use Carbon\Carbon;
 use Filament\Pages\Dashboard;
 
 class Home extends Dashboard

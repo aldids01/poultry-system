@@ -21,6 +21,7 @@ class SupplierResource extends Resource
 
     protected static ?string $navigationGroup = 'Purchase Order';
     protected static ?int $navigationSort = 103;
+    protected static ?string $recordTitleAttribute = 'supplier_name';
 
     public static function form(Form $form): Form
     {

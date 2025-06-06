@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\ProductExporter;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\InventoryTransactions;
@@ -28,6 +29,7 @@ class ProductResource extends Resource
 
     protected static ?string $navigationGroup = 'Inventory';
     protected static ?int $navigationSort = 105;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Form $form): Form
     {
@@ -306,6 +308,11 @@ class ProductResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\ExportBulkAction::make()
+                        ->slideOver()
+                        ->label('Export selected products')
+                        ->modalWidth(MaxWidth::FitContent)
+                        ->exporter(ProductExporter::class),
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ColdRoomResource\Pages;
 use App\Filament\Resources\ColdRoomResource\RelationManagers;
 use App\Models\ColdRoom;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -57,7 +58,8 @@ class ColdRoomResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('batch_number')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('time_in'),
+                Tables\Columns\TextColumn::make('time_in')
+                    ->time('H:ia'),
                 Tables\Columns\TextColumn::make('quality')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('product.name')
@@ -95,15 +97,17 @@ class ColdRoomResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\EditAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\EditAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -124,6 +128,10 @@ class ColdRoomResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

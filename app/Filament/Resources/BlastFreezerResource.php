@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BlastFreezerResource\Pages;
 use App\Filament\Resources\BlastFreezerResource\RelationManagers;
 use App\Models\BlastFreezer;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -58,7 +59,7 @@ class BlastFreezerResource extends Resource
                 Tables\Columns\TextColumn::make('batch_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('time_in')
-                    ->time('H:m:ia'),
+                    ->time('H:ia'),
                 Tables\Columns\TextColumn::make('quality')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('product.name')
@@ -96,15 +97,17 @@ class BlastFreezerResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\EditAction::make()
-                    ->slideOver()
-                    ->modalWidth(MaxWidth::FitContent),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\EditAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::FitContent),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -125,6 +128,10 @@ class BlastFreezerResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
